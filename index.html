@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat with LLM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="wrapper">
+        <div class="chat-container" id="chat-container">
+            {% for chat in chat_history %}
+                <div class="chat-message {{ chat.role }}">
+                    <span>{{ chat.message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <form id="chat-form">
+            <input type="text" id="prompt" name="prompt" placeholder="Type your message..." required autocomplete="off">
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('prompt');
+        const chatContainer = document.getElementById('chat-container');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const prompt = input.value;
+
+            // Show user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.innerHTML = `<span>${prompt}</span>`;
+            chatContainer.appendChild(userMsg);
+
+            input.value = '';
+
+            // Send to backend
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `prompt=${encodeURIComponent(prompt)}`
+            });
+
+            const data = await res.json();
+
+            // Show bot message
+            const botMsg = document.createElement('div');
+            botMsg.className = 'chat-message bot';
+            botMsg.innerHTML = `<span>${data.response}</span>`;
+            chatContainer.appendChild(botMsg);
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        };
+    </script>
+</body>
+</html>
